@@ -2,6 +2,8 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
 
+import com.sun.xml.internal.org.jvnet.fastinfoset.FastInfosetSerializer;
+
 // Task Overview
 
 // Bulls and Cows is an old code-breaking game for two players.
@@ -20,48 +22,40 @@ import java.util.Scanner;
 public class BullsAndCows {
 
 	public enum InputOption {
-		GAMEMODE, DIGIT, NUMBER
+		GAMEMODE, DIGIT, NUMBER, FINISH
 	}
 
 	public enum GameMode {
 		HUMANGUESS, COMPUTERGUESS
 	}
 
-	static public GameMode gameMode = GameMode.COMPUTERGUESS;
+	public GameMode gameMode = GameMode.COMPUTERGUESS;
 	Scanner input = new Scanner(System.in);
 
-	static public final String TRY_AGAIN_STRING = "Please try again. ";
-	static public final String WELCOME_STRING = "Welcome to the game 'Bulls and Cows'";
-	static public final String GAMEMODE_SELECTED = "You have selected the %s gamemode \n";
-	static public final String DIGITS_NUMBER_SELECTED = "You have selected %s number of digits";
-	static public final String GUESS_NUMBER_SELECTED = "Your guess number is %s";
-	static public final String CHOOSE_GAMEMODE_STRING = "Please select the gamemode."
-			+ "\n(1: You guess, 2: Computer guess): ";
-	static public final String ENTER_DIGITS_NUMBER_STRING = "Please select the size of the number for the computer to generate. "
-			+ "\n(From 1 to 9): ";
-	static public final String ENTER_NUMBER_STRING = "Please type your guess number " + "\n(%s numbers maximum): ";
-	static public final String EXCEPTION_STRING = "The exception. ";
-	static public final String OUT_OF_RANGE_STRING = "The number you entered is out of allowed range.";
-	static public final String GENERATING_RANDOM_NUMBER_STRING = "Generating  the number of size %s ...";
-	static public final String COWS_AND_BULLS_CALCULATED_STRING = "Your number has %s bulls and %d cows.";
-	static public final String WIN_STRING = "Congratulation! You guessed the number";
-
-	static public final int[] DIGITS = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-	static public int[] secNum;
-	static public int[] guessNum;
-
-	static public int bulls = 0;
-	static public int cows = 0;
+	public final int[] DIGITS = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+	public int[] secNum;
+	public int[] guessNum;
+	public int bulls;
+	public int cows;
+	public boolean endGame = false;
+	public int steps;
+	int n;
 
 	public BullsAndCows() {
-		System.out.println(WELCOME_STRING);
-		inputFromUser(InputOption.GAMEMODE);
-		System.out.println("Finished 1st input");
-		if (gameMode == GameMode.COMPUTERGUESS) {
-			inputFromUser(InputOption.NUMBER);}
-		else {
-			inputFromUser(InputOption.DIGIT);}
-		playGame();
+		while (endGame == false) {
+			steps = 0;
+			bulls = 0;
+			cows = 0;
+			System.out.println(STRINGS.WELCOME_STRING);
+			inputFromUser(InputOption.GAMEMODE);
+			if (gameMode == GameMode.COMPUTERGUESS) {
+				inputFromUser(InputOption.NUMBER);
+			} else {
+				inputFromUser(InputOption.DIGIT);
+			}
+			playGame();
+			inputFromUser(InputOption.FINISH);
+		}
 	}
 
 	private void inputFromUser(InputOption inputType) {
@@ -70,7 +64,7 @@ public class BullsAndCows {
 
 		switch (inputType) {
 		case GAMEMODE:
-			System.out.println(CHOOSE_GAMEMODE_STRING);
+			System.out.println(STRINGS.CHOOSE_GAMEMODE_STRING);
 
 			while (true) {
 
@@ -79,25 +73,25 @@ public class BullsAndCows {
 					if (a < 3 && a > 0)
 						break;
 					else {
-						System.out.println(OUT_OF_RANGE_STRING + TRY_AGAIN_STRING);
+						System.out.println(STRINGS.OUT_OF_RANGE_STRING + STRINGS.TRY_AGAIN_STRING);
 					}
 				} catch (Exception e) {
-					System.out.println(EXCEPTION_STRING + TRY_AGAIN_STRING);
+					System.out.println(STRINGS.EXCEPTION_STRING + STRINGS.TRY_AGAIN_STRING);
 					input.next();
 				}
 			}
 
 			if (a == 1) {
 				gameMode = GameMode.HUMANGUESS;
-				System.out.printf(GAMEMODE_SELECTED, "Human Guess");
+				System.out.printf(STRINGS.GAMEMODE_SELECTED, "Human Guess");
 			} else {
-			System.out.printf(GAMEMODE_SELECTED, "Computer Guess");
+				System.out.printf(STRINGS.GAMEMODE_SELECTED, "Computer Guess");
 			}
-			
+
 			break;
 		case DIGIT:
 			int n = -1;
-			System.out.print(ENTER_DIGITS_NUMBER_STRING);
+			System.out.print(STRINGS.ENTER_DIGITS_NUMBER_STRING);
 			while (true) {
 
 				try {
@@ -105,24 +99,45 @@ public class BullsAndCows {
 					if (n < 10 && n > 0)
 						break;
 					else {
-						System.out.println(OUT_OF_RANGE_STRING + TRY_AGAIN_STRING);
+						System.out.println(STRINGS.OUT_OF_RANGE_STRING + STRINGS.TRY_AGAIN_STRING);
 					}
 				} catch (Exception e) {
-					System.out.println(EXCEPTION_STRING + TRY_AGAIN_STRING);
+					System.out.println(STRINGS.EXCEPTION_STRING + STRINGS.TRY_AGAIN_STRING);
 					input.next();
 				}
 
 			}
 
 			secNum = genRanNum(n);
-			
+
 			break;
 
 		case NUMBER:
-			guessNum = makeUserGuess();
+			setSecretNumber();
 
 			break;
 
+		case FINISH:
+
+			System.out.println("Do you want to play again? (1 for yes, 2 for no)");
+			while (true) {
+
+				try {
+					a = input.nextInt();
+					if (a < 3 && a > 0) {
+						if (a == 2) {
+							endGame = true;
+							System.out.println("Goodbye!");
+						}
+						break;
+					} else {
+						System.out.println(STRINGS.OUT_OF_RANGE_STRING + STRINGS.TRY_AGAIN_STRING);
+					}
+				} catch (Exception e) {
+					System.out.println(STRINGS.EXCEPTION_STRING + STRINGS.TRY_AGAIN_STRING);
+					input.next();
+				}
+			}
 		}
 
 	}
@@ -130,31 +145,40 @@ public class BullsAndCows {
 	private void playGame() {
 
 		System.out.println("THE GAMES HAS STARTED");
-		int n = secNum.length;
+		n = secNum.length;
 
 		if (gameMode == GameMode.COMPUTERGUESS) {
 			guessNum = genRanNum(n);
 			calculateBullsAndCows(guessNum, true);
-			while (bulls != n) {
-				while (cows != n) {
-
-				}
-			}
+			computerGuess();
+			System.out.printf(STRINGS.COMPUTER_WIN_STRING, steps);
+			System.out.println();
 		} else {
 			while (bulls != n) {
 				guessNum = makeUserGuess();
 				System.out.println("The guessNum = " + Arrays.toString(guessNum));
 				calculateBullsAndCows(guessNum, true);
 			}
+			System.out.println(STRINGS.WIN_STRING);
+		}
+
+	}
+
+	private void computerGuess() {
+		while (bulls != n) {
+			steps++;
+			guessNum = genRanNum(n);
+			calculateBullsAndCows(guessNum, true);
+//			while (cows != n) {
+//			}
 		}
 		
-		System.out.println(WIN_STRING);
 	}
 
 	private int[] makeUserGuess() {
 		String regex = "[1-9]+";
 		String strInput = "";
-		System.out.printf(ENTER_NUMBER_STRING, secNum.length);
+		System.out.printf(STRINGS.ENTER_NUMBER_STRING, secNum.length);
 
 		while (true) {
 			try {
@@ -162,10 +186,10 @@ public class BullsAndCows {
 				if (strInput.matches(regex) && strInput.length() == secNum.length)
 					break;
 				else {
-					System.out.println(OUT_OF_RANGE_STRING + TRY_AGAIN_STRING);
+					System.out.println(STRINGS.OUT_OF_RANGE_STRING + STRINGS.TRY_AGAIN_STRING);
 				}
 			} catch (Exception e) {
-				System.out.println(EXCEPTION_STRING + TRY_AGAIN_STRING);
+				System.out.println(STRINGS.EXCEPTION_STRING + STRINGS.TRY_AGAIN_STRING);
 				input.next();
 			}
 
@@ -177,13 +201,12 @@ public class BullsAndCows {
 	public static int[] stringToArray(String strInput) {
 		int[] out = new int[strInput.length()];
 		for (int i = 0; i < out.length; i++) {
-			out[i] = strInput.charAt(i)-48;
+			out[i] = strInput.charAt(i) - 48;
 		}
 		return out;
 	}
 
 	private void calculateBullsAndCows(int[] guessNum, boolean report) {
-		int n = guessNum.length;
 		cows = 0;
 		bulls = 0;
 
@@ -195,20 +218,20 @@ public class BullsAndCows {
 		}
 
 		if (report == true)
-			System.out.printf(COWS_AND_BULLS_CALCULATED_STRING, bulls, cows);
+			System.out.printf(STRINGS.COWS_AND_BULLS_CALCULATED_STRING, bulls, cows);
+		System.out.println();
 	}
 
 	private void calculateBulls(int[] guessNum) {
-		int n = guessNum.length;
 		for (int i = 0; i < n; i++) {
 			if (secNum[i] == guessNum[i])
 				bulls++;
 		}
 	}
-	
+
 	private void calculateCows(int[] guessNum) {
 		for (int i : guessNum) {
-			for (int j = 0; j < guessNum.length; j++) {
+			for (int j = 0; j < n; j++) {
 				if (i == secNum[j])
 					cows++;
 			}
@@ -216,7 +239,7 @@ public class BullsAndCows {
 	}
 
 	public int[] genRanNum(int n) {
-		System.out.printf(GENERATING_RANDOM_NUMBER_STRING, n);
+		System.out.printf(STRINGS.GENERATING_RANDOM_NUMBER_STRING, n);
 		int[] num = new int[n];
 		int[] digits = getShuffledArray(DIGITS);
 
@@ -224,7 +247,7 @@ public class BullsAndCows {
 			num[i] = digits[i];
 		}
 
-		print(num);
+//		print(num);
 		return num;
 	}
 
@@ -238,6 +261,7 @@ public class BullsAndCows {
 	}
 
 	private int[] getShuffledArray(int[] arrayIn) {
+
 		int[] arrayOut = arrayIn;
 		int n = arrayOut.length;
 		Random random = new Random();
@@ -254,6 +278,29 @@ public class BullsAndCows {
 		}
 
 		return arrayOut;
+	}
+
+	private void setSecretNumber() {
+		String regex = "[1-9]+";
+		String strInput = "";
+		System.out.println(STRINGS.SET_SECRET_STRING);
+
+		while (true) {
+			try {
+				strInput = input.next();
+				if (strInput.matches(regex) && (strInput.length() < 10 || strInput.length() > 0))
+					break;
+				else {
+					System.out.println(STRINGS.OUT_OF_RANGE_STRING + STRINGS.TRY_AGAIN_STRING);
+				}
+			} catch (Exception e) {
+				System.out.println(STRINGS.EXCEPTION_STRING + STRINGS.TRY_AGAIN_STRING);
+				input.next();
+			}
+
+		}
+		secNum = stringToArray(strInput);
+
 	}
 
 	public static void main(String[] args) {
