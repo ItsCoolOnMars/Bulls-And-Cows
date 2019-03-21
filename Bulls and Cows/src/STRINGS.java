@@ -16,8 +16,9 @@ public class STRINGS {
 	static public final String OUT_OF_RANGE_STRING = "The number you entered is out of allowed range.";
 	static public final String GENERATING_RANDOM_NUMBER_STRING = "Generating  the number of size %s ...";
 	static public final String COWS_AND_BULLS_CALCULATED_STRING = "Your number has %s bulls and %d cows.";
-	static public final String WIN_STRING = "Congratulation! You guessed the number";
-	static public final String GOODBYE_STRING = "Goodbye";
+	static public final String WIN_STRING = "Congratulation! You guessed the number (in %s steps!)";
+	static public final String GOODBYE_STRING = "Goodbye!";
 	static public final String PLAY_AGAIN_STRING = "Do you want to play again? (1 for yes, 2 for no)";
-	static public final String COMPUTER_WIN_STRING = "Do you want to play again? (1 for yes, 2 for no)";
+	static public final String COMPUTER_WIN_STRING = "The computer guessed the number with %s steps";
+	
 }

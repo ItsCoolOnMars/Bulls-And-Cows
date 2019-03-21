@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
@@ -29,20 +30,22 @@ public class BullsAndCows {
 		HUMANGUESS, COMPUTERGUESS
 	}
 
-	public GameMode gameMode = GameMode.COMPUTERGUESS;
+	public GameMode gameMode;
 	Scanner input = new Scanner(System.in);
 
-	public final int[] DIGITS = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-	public int[] secNum;
-	public int[] guessNum;
+	public final ArrayList<Integer> DIGITS = new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9));;
+	ArrayList<Integer> secNum = new ArrayList<Integer>();
+	ArrayList<Integer> guessNum = new ArrayList<Integer>();
 	public int bulls;
 	public int cows;
 	public boolean endGame = false;
 	public int steps;
+	public ArrayList<Integer> wrongNumbers;
 	int n;
 
 	public BullsAndCows() {
 		while (endGame == false) {
+			wrongNumbers = new ArrayList<>();
 			steps = 0;
 			bulls = 0;
 			cows = 0;
@@ -85,6 +88,7 @@ public class BullsAndCows {
 				gameMode = GameMode.HUMANGUESS;
 				System.out.printf(STRINGS.GAMEMODE_SELECTED, "Human Guess");
 			} else {
+				gameMode = GameMode.COMPUTERGUESS;
 				System.out.printf(STRINGS.GAMEMODE_SELECTED, "Computer Guess");
 			}
 
@@ -119,7 +123,7 @@ public class BullsAndCows {
 
 		case FINISH:
 
-			System.out.println("Do you want to play again? (1 for yes, 2 for no)");
+			System.out.println(STRINGS.PLAY_AGAIN_STRING);
 			while (true) {
 
 				try {
@@ -127,7 +131,7 @@ public class BullsAndCows {
 					if (a < 3 && a > 0) {
 						if (a == 2) {
 							endGame = true;
-							System.out.println("Goodbye!");
+							System.out.println(STRINGS.GOODBYE_STRING);
 						}
 						break;
 					} else {
@@ -145,45 +149,58 @@ public class BullsAndCows {
 	private void playGame() {
 
 		System.out.println("THE GAMES HAS STARTED");
-		n = secNum.length;
+		n = secNum.size();
 
 		if (gameMode == GameMode.COMPUTERGUESS) {
 			guessNum = genRanNum(n);
-			calculateBullsAndCows(guessNum, true);
+			calculateBullsAndCows(true);
 			computerGuess();
 			System.out.printf(STRINGS.COMPUTER_WIN_STRING, steps);
 			System.out.println();
 		} else {
 			while (bulls != n) {
+				steps++;
 				guessNum = makeUserGuess();
-				System.out.println("The guessNum = " + Arrays.toString(guessNum));
-				calculateBullsAndCows(guessNum, true);
+				System.out.println("The guessNum = " + guessNum.toString());
+				calculateBullsAndCows(true);
 			}
-			System.out.println(STRINGS.WIN_STRING);
+			System.out.printf(STRINGS.WIN_STRING, steps);
+			System.out.println();
 		}
 
 	}
 
 	private void computerGuess() {
 		while (bulls != n) {
+			while (cows != n) {
+				steps++;
+				print(guessNum);
+				if(cows == 0) {
+					for (int i : guessNum) {
+						wrongNumbers.add(i);
+						System.out.println("The wrong numbers are " + wrongNumbers.toString());
+					}
+				}
+				guessNum = genRanNum(n);
+			calculateBullsAndCows(true);
+			}
 			steps++;
-			guessNum = genRanNum(n);
-			calculateBullsAndCows(guessNum, true);
-//			while (cows != n) {
-//			}
+			print(guessNum);
+			guessNum = getShuffledArray(guessNum);
+			calculateBullsAndCows(true);
 		}
-		
+
 	}
 
-	private int[] makeUserGuess() {
+	private ArrayList<Integer> makeUserGuess() {
 		String regex = "[1-9]+";
 		String strInput = "";
-		System.out.printf(STRINGS.ENTER_NUMBER_STRING, secNum.length);
+		System.out.printf(STRINGS.ENTER_NUMBER_STRING, secNum.size());
 
 		while (true) {
 			try {
 				strInput = input.next();
-				if (strInput.matches(regex) && strInput.length() == secNum.length)
+				if (strInput.matches(regex) && strInput.length() == secNum.size())
 					break;
 				else {
 					System.out.println(STRINGS.OUT_OF_RANGE_STRING + STRINGS.TRY_AGAIN_STRING);
@@ -198,23 +215,23 @@ public class BullsAndCows {
 
 	}
 
-	public static int[] stringToArray(String strInput) {
-		int[] out = new int[strInput.length()];
-		for (int i = 0; i < out.length; i++) {
-			out[i] = strInput.charAt(i) - 48;
+	public static ArrayList<Integer> stringToArray(String strInput) {
+		ArrayList<Integer> out = new ArrayList<>();
+		for (int i = 0; i < strInput.length(); i++) {
+			out.add(strInput.charAt(i) - 48);
 		}
 		return out;
 	}
 
-	private void calculateBullsAndCows(int[] guessNum, boolean report) {
+	private void calculateBullsAndCows(boolean report) {
 		cows = 0;
 		bulls = 0;
 
-		calculateBulls(guessNum);
+		calculateBulls();
 		if (bulls == n) {
 			cows = bulls;
 		} else {
-			calculateCows(guessNum);
+			calculateCows();
 		}
 
 		if (report == true)
@@ -222,59 +239,65 @@ public class BullsAndCows {
 		System.out.println();
 	}
 
-	private void calculateBulls(int[] guessNum) {
+	private void calculateBulls() {
 		for (int i = 0; i < n; i++) {
-			if (secNum[i] == guessNum[i])
+			if (secNum.get(i) == guessNum.get(i))
 				bulls++;
 		}
 	}
 
-	private void calculateCows(int[] guessNum) {
+	private void calculateCows() {
 		for (int i : guessNum) {
 			for (int j = 0; j < n; j++) {
-				if (i == secNum[j])
+				if (i == secNum.get(j))
 					cows++;
 			}
 		}
 	}
 
-	public int[] genRanNum(int n) {
+	public ArrayList<Integer> genRanNum(int n) {
 		System.out.printf(STRINGS.GENERATING_RANDOM_NUMBER_STRING, n);
-		int[] num = new int[n];
-		int[] digits = getShuffledArray(DIGITS);
+		ArrayList<Integer> num = new ArrayList<>(0);
+		ArrayList<Integer> digits = getShuffledArray(DIGITS);
+		int i = 0;
 
-		for (int i = 0; i < n; i++) {
-			num[i] = digits[i];
+		while(!(num.size() == n)) {
+			System.out.printf("#### CHECKING... number %s", digits.get(i) + "\n");
+			System.out.println(wrongNumbers.contains(new Integer(digits.get(i))));
+			if(!wrongNumbers.contains(digits.get(i))) {
+				num.add(digits.get(i));
+			}
+			i++;
 		}
 
 //		print(num);
 		return num;
 	}
 
-	private void print(int[] num) {
+	private void print(ArrayList<Integer> guessNum2) {
 		String string = new String();
-		for (int i : num) {
+		for (int i : guessNum2) {
 			Integer a = i;
 			string = string.concat(a.toString());
 		}
 		System.out.println(string);
 	}
 
-	private int[] getShuffledArray(int[] arrayIn) {
+	private ArrayList<Integer> getShuffledArray(ArrayList<Integer> guessNum2) {
 
-		int[] arrayOut = arrayIn;
-		int n = arrayOut.length;
+		ArrayList<Integer> arrayOut = guessNum2;
+		int n = arrayOut.size();
 		Random random = new Random();
 		// Loop over array.
-		for (int i = 0; i < arrayOut.length; i++) {
+		for (int i = 0; i < arrayOut.size(); i++) {
 			// Get a random index of the array past the current index.
 			// ... The argument is an exclusive bound.
 			// It will not go past the array's end.
 			int randomValue = i + random.nextInt(n - i);
 			// Swap the random element with the present element.
-			int randomElement = arrayOut[randomValue];
-			arrayOut[randomValue] = arrayOut[i];
-			arrayOut[i] = randomElement;
+			int randomElement = arrayOut.get(randomValue);
+			arrayOut.set(randomValue, arrayOut.get(i));
+			arrayOut.set(i, randomElement);
 		}
 
 		return arrayOut;
