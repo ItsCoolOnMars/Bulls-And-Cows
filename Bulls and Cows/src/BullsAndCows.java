@@ -1,7 +1,9 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Set;
 
 import com.sun.xml.internal.org.jvnet.fastinfoset.FastInfosetSerializer;
 
@@ -16,7 +18,7 @@ public class BullsAndCows {
 	/**
 	 * 
 	 * @author Maxim Musikhin
-	 *
+	 *	Enumerators to assist the user input method
 	 */
 	public enum InputOption {
 		GAMEMODE, DIGIT, NUMBER, FINISH
@@ -25,15 +27,15 @@ public class BullsAndCows {
 	/**
 	 * 
 	 * @author Maxim Musikhin
-	 *
+	 *	Enumerators to switch between game mods
 	 */
 	public enum GameMode {
 		HUMANGUESS, COMPUTERGUESS
 	}
 
+	//Initialising the variables
 	public GameMode gameMode;
 	Scanner input = new Scanner(System.in);
-
 	public final ArrayList<Integer> DIGITS = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));;
 	ArrayList<Integer> secNum = new ArrayList<Integer>();
 	ArrayList<Integer> guessNum = new ArrayList<Integer>();
@@ -42,14 +44,19 @@ public class BullsAndCows {
 	public boolean endGame = false;
 	public int steps;
 	public ArrayList<Integer> wrongNumbers;
+	public ArrayList<Integer> bullIndices;
+	ArrayList<Integer> oldNum;
+	int oldCows;
+	int oldBulls;
 	int n;
 
 	/**
-	 * 
+	 * The constructor that starts the game.
 	 */
 	public BullsAndCows() {
 		while (endGame == false) {
 			wrongNumbers = new ArrayList<>();
+			bullIndices = new ArrayList<>();
 			steps = 0;
 			bulls = 0;
 			cows = 0;
@@ -66,8 +73,8 @@ public class BullsAndCows {
 	}
 
 	/**
-	 * 
-	 * @param inputType
+	 * Method to get a response from the user.
+	 * @param inputType different types of expected inputs from the user
 	 */
 	private void inputFromUser(InputOption inputType) {
 
@@ -125,6 +132,7 @@ public class BullsAndCows {
 			break;
 
 		case NUMBER:
+			
 			setSecretNumber();
 
 			break;
@@ -155,7 +163,7 @@ public class BullsAndCows {
 	}
 
 	/**
-	 * 
+	 * The method that starts the game
 	 */
 	private void playGame() {
 
@@ -163,8 +171,7 @@ public class BullsAndCows {
 		n = secNum.size();
 
 		if (gameMode == GameMode.COMPUTERGUESS) {
-			guessNum = genRanNum(n);
-			calculateBullsAndCows(true);
+
 			computerGuess();
 			System.out.printf(STRINGS.COMPUTER_WIN_STRING, steps);
 			System.out.println();
@@ -181,58 +188,148 @@ public class BullsAndCows {
 	}
 
 	/**
-	 * 
+	 * The method that is responsible for computer guessing the number
 	 */
 	private void computerGuess() {
+		guessNum = genRanNum(n);
+		calculateBullsAndCows(true);
+			findCows();
+			findBulls();
+	}
+
+	/**
+	 * The method that is responsible for a computer to get all bulls
+	 */
+	private void findBulls() {
 		while (bulls != n) {
-			while (cows != n) {
-				print(guessNum);
-				if (cows == 0) {
-					for (int i : guessNum) {
-						wrongNumbers.add(i);
-					}
-					System.out.println("The wrong numbers are " + wrongNumbers.toString());
-					guessNum = genRanNum(n);
-					calculateBullsAndCows(true);
-					if (cows == n) {
-						break;
-					}
-				}
-				if (cows > 0 && cows < n) {
+			// INFINITE LOOP HERE
+			oldNum = new ArrayList<>(guessNum);
+			oldBulls = bulls;
+			System.out.println("BULLS INDICES LIST: " + bullIndices.toString());
+			for (int i = 0; i < n; i++) {
+				if (!bullIndices.contains(i)) {
+					for (int j = i; j < n; j++) {
+						if (!bullIndices.contains(j)) {
+							swap2indices(i,j);
+							calculateBullsAndCows(true);
+							if (bulls == 0 && oldBulls == 0) {
 
-					for (int i = 0; i < n; i++) {
-						ArrayList<Integer> oldNum = new ArrayList<>(guessNum);
-						int oldCows = cows;
-						int oldBulls = bulls;
-						for (Integer j : DIGITS) {
-							if (!wrongNumbers.contains(j) && !guessNum.contains(j)) {
-								guessNum.set(i, j);
-								calculateBullsAndCows(true);
-								if (oldCows > cows) {
-									wrongNumbers.add(guessNum.get(i));
-									guessNum = new ArrayList<>(oldNum);
-								} else if (oldCows < cows) {
-									wrongNumbers.add(oldNum.get(i));
-								}
-								break;
+							} else if (bulls == oldBulls + 2) {
+								bullIndices.add(j);
+								bullIndices.add(i);
+							} else if (bulls == oldBulls + 1) {
 
+							} else if (bulls == oldBulls) {
+
+							} else if (bulls == oldBulls - 1) {
+
+							} else if (bulls == oldBulls - 2) {
+								guessNum = new ArrayList<>(oldNum);
+								bullIndices.add(j);
+								bullIndices.add(i);
 							}
 						}
 					}
-
-				}
-
-				if (cows == n) {
-					System.out.println("ALL OF THE COW NUMEBRS HAVE BEEN FOUND");
-					System.out.println("WRONG NUMBER LIST: " + wrongNumbers.toString());
 				}
 
 			}
-			print(guessNum);
-			guessNum = getShuffledArray(guessNum);
-			calculateBullsAndCows(true);
+
 		}
 
+	}
+
+
+	/**
+	 * The method that swaps 2 numbers in the guessNum
+	 * @param i first index
+	 * @param j second index
+	 */
+	private void swap2indices(int i, int j) {
+		Integer temp = guessNum.get(i);
+		guessNum.set(i, guessNum.get(j));
+		guessNum.set(j, temp);
+	}
+
+	/**
+	 * The method that is responsible for a computer to get all cows
+	 */
+	private void findCows() {
+		while (cows != n) {
+
+			System.out.println(wrongNumbers.toString());
+			System.out.println(guessNum.toString());
+			if(wrongNumbers.size() + n == 9) {
+
+				break;
+			}
+			
+			if (cows == 0) {
+				for (int i : guessNum) {
+					wrongNumbers.add(i);
+				}
+				System.out.println("The wrong numbers are " + wrongNumbers.toString());
+				guessNum = genRanNum(n);
+				calculateBullsAndCows(true);
+				if (cows == n) {
+					break;
+				}
+			}
+			if (cows > 0 && cows < n) {
+				for (int i = 0; i < n; i++) {
+					oldNum = new ArrayList<>(guessNum);
+					oldCows = cows;
+					oldBulls = bulls;
+					for (Integer j : DIGITS) {
+						// Sometimes leaves with not all cows
+						if (!wrongNumbers.contains(j) && !guessNum.contains(j)) {
+							System.out.println("Swap " + i + " index number to " + j );
+							guessNum.set(i, j);
+							calculateBullsAndCows(true);
+							if (oldCows > cows) {
+								System.out.println("Swap negative, reverse old number");
+								wrongNumbers.add(j);
+								System.out.println("Adding " + j + " to the wrong numbers array " + wrongNumbers.toString());
+								guessNum = new ArrayList<>(oldNum);
+								break;
+							} else if (oldCows < cows) {
+								System.out.println("Swap positive");
+								wrongNumbers.add(oldNum.get(i));
+								System.out.println("Adding " + oldNum.get(i) + " to the wrong numbers array " + wrongNumbers.toString());
+								break;
+							} else {
+								System.out.println("Swap neutral");
+								if(bulls<oldBulls) {
+									guessNum = new ArrayList<>(oldNum); 
+									if(!bullIndices.contains(i))bullIndices.add(i);
+//									guessNum.set(i+1, j);
+								} else if (oldBulls < bulls) {
+//									guessNum.set(i+1, j);
+									if(!bullIndices.contains(i))bullIndices.add(i);
+								}
+							}
+
+						}
+					}
+					if(cows==n) {
+					break;
+				}
+				}
+
+				
+			}
+
+				
+
+			
+		}
+
+		System.out.println("ALL OF THE COW NUMEBRS HAVE BEEN FOUND");
+		System.out.println("WRONG NUMBER LIST: " + wrongNumbers.toString());
+		System.out.println("BULLS INDICES LIST: " + bullIndices.toString());
+		
+		
+		
+		
 	}
 
 	/**
@@ -357,12 +454,12 @@ public class BullsAndCows {
 
 	/**
 	 * 
-	 * @param guessNum2
+	 * @param arrayIn
 	 * @return
 	 */
-	private ArrayList<Integer> getShuffledArray(ArrayList<Integer> guessNum2) {
+	private ArrayList<Integer> getShuffledArray(ArrayList<Integer> arrayIn) {
 
-		ArrayList<Integer> arrayOut = guessNum2;
+		ArrayList<Integer> arrayOut = arrayIn;
 		int n = arrayOut.size();
 		Random random = new Random();
 		for (int i = 0; i < arrayOut.size(); i++) {
@@ -382,12 +479,25 @@ public class BullsAndCows {
 		String regex = "[1-9]+";
 		String strInput = "";
 		System.out.println(STRINGS.SET_SECRET_STRING);
+		
+		Set <Integer> set;
+		ArrayList <Integer> array;
 
+		
 		while (true) {
 			try {
 				strInput = input.next();
-				if (strInput.matches(regex) && (strInput.length() < 10 || strInput.length() > 0))
+				if (strInput.matches(regex) && (strInput.length() < 10 || strInput.length() > 0)) {
+					array = new ArrayList<Integer>(stringToArray(strInput));
+					set = new HashSet<Integer>(array);
+				if(!(set.size() < array.size())){
 					break;
+				} else {
+					System.out.println("Your Number has duplicate values " + STRINGS.TRY_AGAIN_STRING);
+				}
+					
+				}
+					
 				else {
 					System.out.println(STRINGS.OUT_OF_RANGE_STRING + STRINGS.TRY_AGAIN_STRING);
 				}
@@ -406,7 +516,7 @@ public class BullsAndCows {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		BullsAndCows test = new BullsAndCows();
+		new BullsAndCows();
 
 	}
 }
